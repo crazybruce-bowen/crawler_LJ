@@ -11,6 +11,7 @@ from requests.exceptions import RequestException
 from pyquery import PyQuery as pq
 import json
 import time
+from multiprocessing import Pool
 
 base_url = 'https://sh.lianjia.com'
 url = 'https://sh.lianjia.com/xiaoqu/bp6ep10000/'
@@ -61,9 +62,16 @@ def get_community_info(html):
     base_info_dict = dict(zip(info_key, info_value))
     return base_info_dict
 
-
-
-def main():
+def main(n):
+    global df_community_info
+    i = df_community_urls.iloc[n]
+    info_dict = get_community_info(get_one_page_html(i))
+    info_dict['url'] = i
+    df_community_info = df_community_info.append(info_dict, ignore_index=True)
+    return
+#%%
+if __name__ == '__main__':
+    
     # 获取首页html 仅保留房价6w起步的小区
     base_html = get_one_page_html(url)
     # 生成分区域urls字典
@@ -103,17 +111,24 @@ def main():
     time0 = time.time()
     time00 = time.time()
     print('= 开始获取小区具体信息, 共计{}个小区 ='.format(len(df_community_urls)))
-    for i in df_community_urls:
-        info_dict = get_community_info(get_one_page_html(i))
-        info_dict['url'] = i
-        df_community_info = df_community_info.append(info_dict, ignore_index=True)
-        n += 1
-        time1 = time.time()
-        timedelta = time1 - time0
-        if n % 100 == 0:
-            time0 = time1            
-            print('= 已经完成{}个房源记录, 耗时{}秒 ='.format(n, round(timedelta, 2)))
+    
+    # ========================== 多线程
+    pool = Pool()
+    
+    # ===========================
+    pool.map(main, [i for i in range(len(df_community_urls))])
+    # for i in df_community_urls:
+    #     info_dict = get_community_info(get_one_page_html(i))
+    #     info_dict['url'] = i
+    #     df_community_info = df_community_info.append(info_dict, ignore_index=True)
+    #     n += 1
+    #     time1 = time.time()
+    #     timedelta = time1 - time0
+    #     if n % 100 == 0:
+    #         time0 = time1            
+    #         print('= 已经完成{}个房源记录, 耗时{}秒 ='.format(n, round(timedelta, 2)))
     print('== 房源记录全部处理完毕，耗时{}秒 =='.format(round(time.time()-time00, 2)))
+    df_community_info.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\result\小区基础信息.xlsx')
     # # 分区域抓取信息
     # for i in dict_urls.values():
     #     generate_house_urls(i)
