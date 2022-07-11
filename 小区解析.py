@@ -16,7 +16,7 @@ from multiprocessing import Pool
 base_url = 'https://sh.lianjia.com'
 url = 'https://sh.lianjia.com/xiaoqu/bp6ep10000/'
 
-
+#%%
 def get_one_page_html(url):
     """ 获取网站每一页的html """
     headers = {
@@ -139,10 +139,22 @@ if __name__ == '__main__':
 s_url = 'https://sh.lianjia.com/xiaoqu/5011000017872/'
 s_html = get_one_page_html(s_url)
 
+html = get_one_page_html(url)
 doc = pq(s_html)
-# b = generate_house_urls(get_one_page_html(url))
+b = generate_area_urls(get_one_page_html(url))
 # url = 'https://sh.lianjia.com/xiaoqu/5011000017872/'
 # html = get_one_page_html(url)
+
+#%% MongoDB test
+import pymongo
+client = pymongo.MongoClient("localhost",27017)
+
+db_test = client.bw_test # databases
+res = [{'area': i, 'url': b[i]} for i in b]
+db_test.area_urls.insert_many(res)
+
+#%%
+db_test
 
 #%% main_test
 
