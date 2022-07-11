@@ -62,6 +62,7 @@ def get_community_info(html):
     base_info_dict = dict(zip(info_key, info_value))
     return base_info_dict
 
+
 def main(n):
     global df_community_info
     i = df_community_urls.iloc[n]
