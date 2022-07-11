@@ -11,12 +11,13 @@ import pandas as pd
 from requests.exceptions import RequestException
 from pyquery import PyQuery as pq
 # from bs4 import BeautifulSoup
-import pymongo
+# import pymongo
 # from config import *
-from multiprocessing import Pool
+# from multiprocessing import Pool
 
-#%% 
+#
 base_url = 'https://sh.lianjia.com'
+
 
 def get_one_page_html(url):
     """ 获取网站每一页的html """
@@ -32,6 +33,7 @@ def get_one_page_html(url):
             return None
     except RequestException:
         return None
+
 
 def find_page_url(html) -> [str]:
     """ 根据html获取分页url """
@@ -53,6 +55,7 @@ def find_room_url(html) -> [str]:
         url = base_url + url_
         res.append(url)
     return res
+
 
 def get_room_info_page(html) -> [dict]:  # 获取一整个页面的房间信息
     """
@@ -85,6 +88,7 @@ def get_room_info_page(html) -> [dict]:  # 获取一整个页面的房间信息
         res.append(dict_info)
     return res
 
+
 def get_room_info(html) -> dict:
     """
         获取单个房源url的信息
@@ -93,22 +97,22 @@ def get_room_info(html) -> dict:
     pass
 
 
-#%%
-my_html = get_one_page_html('https://sh.lianjia.com/zufang/pudong/rt200600000001l0l1rp6/?showMore=1')  # 浦东
+def main(path):
+    my_html = get_one_page_html('https://sh.lianjia.com/zufang/pudong/rt200600000001l0l1rp6/?showMore=1')  # 浦东
 
-pages = find_page_url(my_html)
+    pages = find_page_url(my_html)
 
-df = pd.DataFrame()
-n = 0 
-for p in pages:
-    p_html = get_one_page_html(p)
-    tmp = get_room_info_page(p_html)
-    for i in tmp:
-        df = df.append(i, ignore_index=True)
-    n += 1
-    print('== finish page {} df size is {}'.format(n, df.size))
-df.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\result\链家浦东.xlsx', 
-            index=None)
+    df = pd.DataFrame()
+    n = 0
+    for p in pages:
+        p_html = get_one_page_html(p)
+        tmp = get_room_info_page(p_html)
+        for i in tmp:
+            df = df.append(i, ignore_index=True)
+        n += 1
+        print('== finish page {} df size is {}'.format(n, df.size))
+    df.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\result\链家浦东.xlsx',
+                index=None)
 #%% TODOlist
 """
 下一步将筛选条件参数化
