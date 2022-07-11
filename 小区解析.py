@@ -31,7 +31,7 @@ def get_one_page_html(url):
             return None
     except RequestException:
         return None
-
+ 
 
 def generate_area_urls(html):
     """ 解析主页，返回各区的urls dict """
