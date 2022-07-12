@@ -7,11 +7,13 @@ Created on Mon Jul 11 10:28:03 2022
 
 import requests
 import pandas as pd
+import numpy as np
 from requests.exceptions import RequestException
 from pyquery import PyQuery as pq
 import json
 import time
 from multiprocessing import Pool
+import re
 
 base_url = 'https://sh.lianjia.com'
 url = 'https://sh.lianjia.com/xiaoqu/bp6ep10000/'
@@ -55,11 +57,19 @@ def generate_community_urls(html):
 def get_community_info(html):
     """ 获取小区基础信息 """
     doc = pq(html)
+    # base info
     items_key = doc('div.xiaoquInfoItem > span.xiaoquInfoLabel').items()
     info_key = [i.text() for i in items_key]
     items_value = doc('div.xiaoquInfoItem > span.xiaoquInfoContent').items()
     info_value = [i.text() for i in items_value]
     base_info_dict = dict(zip(info_key, info_value))
+    # price
+    items_price = doc('li.fl')('span').items()
+    list_price = [int(re.findall('\\d+', i.text())[0]) for i in items_price]
+    items_house_desc = doc('li.fl')('div.goodSellItemDesc').items()
+    list_desc = [float(re.findall(r"\d+\.?\d*", i.text().split('/')[0])[0]) for i in items_house_desc]
+    list_avgprice = [i/j for i, j in zip(list_price, list_desc)]
+    base_info_dict['avg_price'] = round(np.mean(list_avgprice), 2)
     return base_info_dict
 
 
@@ -136,15 +146,13 @@ if __name__ == '__main__':
 
 #%% sample test
 
-s_url = 'https://sh.lianjia.com/xiaoqu/5011000017872/'
+s_url = 'https://sh.lianjia.com/xiaoqu/5011102207057/'
 s_html = get_one_page_html(s_url)
 
-html = get_one_page_html(url)
 doc = pq(s_html)
-b = generate_area_urls(get_one_page_html(url))
-# url = 'https://sh.lianjia.com/xiaoqu/5011000017872/'
-# html = get_one_page_html(url)
 
+#%%
+for i in doc('li.fl').items()
 #%% MongoDB test
 import pymongo
 client = pymongo.MongoClient("localhost",27017)
@@ -153,8 +161,6 @@ db_test = client.bw_test # databases
 res = [{'area': i, 'url': b[i]} for i in b]
 db_test.area_urls.insert_many(res)
 
-#%%
-db_test
 
 #%% main_test
 
