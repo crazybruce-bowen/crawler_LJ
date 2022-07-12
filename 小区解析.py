@@ -101,10 +101,10 @@ if __name__ == '__main__':
     # ========================================
     # 输出一下urls
     # json
-    with open(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\data\小区urls.txt', 'w', encoding='utf-8') as f:
+    with open(r'.\data\小区urls.txt', 'w', encoding='utf-8') as f:
         json.dump(area_community_urls, f,  ensure_ascii=False)
     # dataframe
-    df_community_urls.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\data\小区urls.xlsx',
+    df_community_urls.to_excel(r'.\data\小区urls.xlsx',
                            merge_cells=False, header=['url'])
     # 抓取小区信息
     df_community_info = pd.DataFrame()
@@ -113,23 +113,24 @@ if __name__ == '__main__':
     time00 = time.time()
     print('= 开始获取小区具体信息, 共计{}个小区 ='.format(len(df_community_urls)))
     
-    # ========================== 多线程
-    pool = Pool()
+    # # ========================== 多进程
+    # pool = Pool()
+    # pool.map(main, range(5))
     
-    # ===========================
-    pool.map(main, [i for i in range(len(df_community_urls))])
-    # for i in df_community_urls:
-    #     info_dict = get_community_info(get_one_page_html(i))
-    #     info_dict['url'] = i
-    #     df_community_info = df_community_info.append(info_dict, ignore_index=True)
-    #     n += 1
-    #     time1 = time.time()
-    #     timedelta = time1 - time0
-    #     if n % 100 == 0:
-    #         time0 = time1            
-    #         print('= 已经完成{}个房源记录, 耗时{}秒 ='.format(n, round(timedelta, 2)))
+    # # =========================== 单进程
+    
+    for i in df_community_urls:
+        info_dict = get_community_info(get_one_page_html(i))
+        info_dict['url'] = i
+        df_community_info = df_community_info.append(info_dict, ignore_index=True)
+        n += 1
+        time1 = time.time()
+        timedelta = time1 - time0
+        if n % 100 == 0:
+            time0 = time1            
+            print('= 已经完成{}个房源记录, 耗时{}秒 ='.format(n, round(timedelta, 2)))
     print('== 房源记录全部处理完毕，耗时{}秒 =='.format(round(time.time()-time00, 2)))
-    df_community_info.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\result\小区基础信息.xlsx')
+    df_community_info.to_excel(r'.\result\小区基础信息.xlsx')
     # # 分区域抓取信息
     # for i in dict_urls.values():
     #     generate_house_urls(i)
