@@ -152,7 +152,6 @@ s_html = get_one_page_html(s_url)
 doc = pq(s_html)
 
 #%%
-for i in doc('li.fl').items()
 #%% MongoDB test
 import pymongo
 client = pymongo.MongoClient("localhost",27017)
