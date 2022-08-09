@@ -15,8 +15,9 @@ import time
 from multiprocessing import Pool
 import re
 
-base_url = 'https://sh.lianjia.com'
-url = 'https://sh.lianjia.com/xiaoqu/bp6ep10000/'
+base_url = 'https://sh.lianjia.com'  # 链家首页
+url = 'https://sh.lianjia.com/xiaoqu/bp6ep10000/'  # 均价6w以上小区
+
 
 #%%
 def get_one_page_html(url):
@@ -38,9 +39,10 @@ def get_one_page_html(url):
 def generate_area_urls(html):
     """ 解析主页，返回各区的urls dict """
     doc = pq(html)
-    res = {}
+    res = []
     for i in doc('div[data-role=ershoufang]')('a').items():
-        res[i.text()] = base_url + i.attr('href')
+        res.append({'area': i.text(),
+                    'url': base_url + i.attr('href')})
     return res
 
 
@@ -80,6 +82,8 @@ def main(n):
     info_dict['url'] = i
     df_community_info = df_community_info.append(info_dict, ignore_index=True)
     return
+
+
 #%%
 if __name__ == '__main__':
     
