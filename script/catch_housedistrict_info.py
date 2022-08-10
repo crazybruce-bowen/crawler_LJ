@@ -42,7 +42,7 @@ class HouseDistrictCatching:
     @staticmethod
     def generate_hd_urls(url) -> [dict]:
         """
-        解析当前页面下的房源url
+        解析当前页面下的小区url
 
         :param url: 支持首页，区域页面，区域pg页等
         :return:
@@ -51,7 +51,7 @@ class HouseDistrictCatching:
         doc = pq(get_one_page_html(url))
         res = []
         for i in doc('div.title > a').items():
-            res.append({'house': i.text(),
+            res.append({'house_district': i.text(),
                         'url': i.attr('href')})
         return res
 
@@ -134,12 +134,12 @@ class HouseDistrictCatching:
         for i in urls_hd_list:
             try:
                 house_info = self.get_hd_info(i.get('url'))
-                house_info['house_name'] = i.get('house')
+                house_info['house_district_name'] = i.get('house_district')
                 house_info['区域'] = area
                 house_info['url'] = i.get('url')
                 hd_info_list.append(house_info)
             except Exception as e:
-                print('==== {} 小区信息获取失败 ===='.format(i.get('house')))
+                print('==== {} 小区信息获取失败 ===='.format(i.get('house_district')))
                 print('==== 异常原因如下 =====', traceback.format_exc())
             n += 1
             if n % 100 == 0:
