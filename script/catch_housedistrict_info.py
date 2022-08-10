@@ -1,5 +1,6 @@
-import logging
 import os
+import traceback
+
 path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家'
 os.chdir(path)
 
@@ -7,6 +8,9 @@ from script.http_ops.html_service import get_one_page_html
 from pyquery import PyQuery as pq
 import re
 import numpy as np
+from script.common_ops.utils import print_time
+import time
+from script.io_ops.io_service import save_info_to_local, save_info_to_mongodb
 
 
 class HouseDistrictCatching:
@@ -36,7 +40,7 @@ class HouseDistrictCatching:
         return res
 
     @staticmethod
-    def generate_hd_urls(url) -> list:
+    def generate_hd_urls(url) -> [dict]:
         """
         解析当前页面下的房源url
 
@@ -86,7 +90,7 @@ class HouseDistrictCatching:
         items_house_desc = doc('li.fl')('div.goodSellItemDesc').items()
         list_desc = [float(re.findall(r"\d+\.?\d*", i.text().split('/')[0])[0]) for i in items_house_desc]
         list_avgprice = [i/j for i, j in zip(list_price, list_desc)]
-        base_info_dict['avg_price'] = round(np.mean(list_avgprice), 2)
+        base_info_dict['avg_price'] = round(np.mean(list_avgprice), 2) if list_avgprice else None
         return base_info_dict
 
     @staticmethod
@@ -96,7 +100,7 @@ class HouseDistrictCatching:
 
         :param url: 区域页面或者总页面
         :param n: pg号
-        :return:
+        :return: url_pg: 带pg号的url
         """
         tmp = url.split('/')
         tmp[-2] = 'pg{}'.format(n) + tmp[-2]
@@ -110,25 +114,60 @@ class HouseDistrictCatching:
         return area_url
 
     def get_area_hd_info(self, area):
-        """
-        获取某个区的全部小区信息
-
-        :param area:
-        :return:
-        """
-        area_info_list = self.generate_area_urls()
-        area_url = dict(zip([i['area'] for i in area_info_list], [i['url'] for i in area_info_list])).get(area)
+        """ 获取某个区的全部小区信息 """
+        area_url = self.get_url_by_area(area)
         if not area_url:
             return False, '未获取到该区 {} 的链接，支持的区域为 {}'.format(area, [i.area for i in area_url])
 
-        # 获取该区域全部小区的url
+        # 获取该区域全部小区的urls
+        print('== 开始获取小区urls ==')
         pg_num = self.calculate_pg_num(area)
         urls_pg_list = [self.generate_pg_url(area_url, i) for i in range(pg_num)]
         urls_hd_list = list()
-        for i in urls_pg_list:
+        for i in urls_pg_list:  # 区域循环
             urls_hd_list += self.generate_hd_urls(i)
-
         print('== {} 区域总计 {} 个小区'.format(area, len(urls_hd_list)))  # TODO 改成logging方法
         # 分url获取
+        print('== 开始获取各小区信息 ==')
+        hd_info_list = list()
+        n = 0
+        for i in urls_hd_list:
+            try:
+                house_info = self.get_hd_info(i.get('url'))
+                house_info['house_name'] = i.get('house')
+                house_info['区域'] = area
+                house_info['url'] = i.get('url')
+                hd_info_list.append(house_info)
+            except Exception as e:
+                print('==== {} 小区信息获取失败 ===='.format(i.get('house')))
+                print('==== 异常原因如下 =====', traceback.format_exc())
+            n += 1
+            if n % 100 == 0:
+                print('=== 完成 {} 个小区，共有 {} 个'.format(n, len(urls_hd_list)))
+        return hd_info_list
 
-        return urls_hd_list
+    @print_time
+    def get_total_hd_info(self):
+        """ 获取全区 """
+        area_info_list = self.generate_area_urls() if not self.urls_area else self.urls_area
+        print('= 分区域获取小区信息开始！共有 {} 个区域 = '.format(len(area_info_list)))
+        hd_info_list = list()
+        for i in area_info_list:
+            area = i.get('area')
+            print('== 开始操作 {} 区域'.format(area))
+            time1 = time.time()
+            hd_info_list += self.get_area_hd_info(area)
+            timedelta = int(time.time() - time1)
+            print('== 区域 {} 已经完成，耗时 {} 秒'.format(area, timedelta))
+        return hd_info_list
+
+
+#%% 测试区域
+if __name__ == '__main__':
+    t = HouseDistrictCatching()
+    hd_pudong = t.get_area_hd_info('浦东')
+    out_path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家\result\20220810'
+    flag1, df = save_info_to_local(hd_pudong, out_path)
+    db_config = {'db_name': 'bw_test', 'tb_name': 'pudong_house_district_info'}
+    flag2 = save_info_to_mongodb(hd_pudong, db_config)
+

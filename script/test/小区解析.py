@@ -159,7 +159,7 @@ doc = pq(s_html)
 #%%
 #%% MongoDB test
 import pymongo
-client = pymongo.MongoClient("localhost",27017)
+client = pymongo.MongoClient("localhost", 27017)
 
 db_test = client.bw_test # databases
 res = [{'area': i, 'url': b[i]} for i in b]
