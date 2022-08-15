@@ -101,7 +101,8 @@ class HouseCatching:
             dict_info = {'name': name, 'area_str': area_str, 'price_str': price_str,
                          'area': area, 'price': price, 'avg_price': avg_price,
                          'orientation': orientation, 'types': types, 'floor': floor,
-                         'updated_info': updated_info, 'sub_area': sub_area}
+                         'updated_info': updated_info, '子区域': sub_area,
+                         'room_url': room_url}
             res.append(dict_info)
         return res
 
