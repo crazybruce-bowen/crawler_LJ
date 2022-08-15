@@ -84,7 +84,7 @@ class HouseCatching:
         room_info = doc('.content__list--item--main').items() # generator
         res = []
         for i in room_info:
-            room_url = self.url_base + i('.twoline').attr('href').attr('href')
+            room_url = self.url_base + i('.twoline').attr('href')
             desc = i('.content__list--item--des').text()
             price_str = i('.content__list--item-price').text()
             updated_info = i('.content__list--item--time.oneline').text()
