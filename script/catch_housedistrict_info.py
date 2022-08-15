@@ -117,7 +117,7 @@ class HouseDistrictCatching:
         """ 获取某个区的全部小区信息 """
         area_url = self.get_url_by_area(area)
         if not area_url:
-            return False, '未获取到该区 {} 的链接，支持的区域为 {}'.format(area, [i.area for i in area_url])
+            return False, '未获取到该区 {} 的链接，支持的区域为 {}'.format(area, [i.area for i in self.generate_area_urls()])
 
         # 获取该区域全部小区的urls
         print('== 开始获取小区urls ==')

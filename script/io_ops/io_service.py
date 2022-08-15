@@ -1,4 +1,6 @@
 # 本方法为数据导出等功能
+import copy
+
 import pandas as pd
 import numpy as np
 import os
@@ -14,6 +16,9 @@ def save_info_to_local(info: [dict], path: str, data_type='DataFrame'):
     :param data_type: 输出文件的格式。目前支持 'json' 和 'DataFrame'
     :return: True/False, info
     """
+    # 生成输出路径
+    if not os.path.isdir(path):
+        os.mkdir(path)
     # 生成输出的信息
     if data_type == 'DataFrame':
         df = pd.DataFrame.from_dict(info)
@@ -38,6 +43,7 @@ def save_info_to_mongodb(info: [dict], db_config: dict, server_config=None):
     :param server_config:
     :return:
     """
+    _info = copy.deepcopy(info)
     # 参数解析
     if server_config:
         host = server_config.get('host')
@@ -53,7 +59,7 @@ def save_info_to_mongodb(info: [dict], db_config: dict, server_config=None):
     client = pymongo.MongoClient(host, port)
     db = client.get_database(db_name)
     tb = db.get_collection(tb_name)
-    tb.insert_many(info)
+    tb.insert_many(_info)
     return True
 
 
