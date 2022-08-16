@@ -19,7 +19,8 @@ import pymongo
 client = pymongo.MongoClient("localhost", 27017)
 db_house_renting = client['house_renting']
 collection = db_house_renting.community_info_lianjia
-df_community_info = pd.read_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\data\小区urls测试.xlsx')
+# df_community_info = pd.read_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\data\小区urls测试.xlsx')
+
 
 def get_one_page_html(url):
     """ 获取网站每一页的html """
@@ -56,17 +57,18 @@ def get_community_info(html):
     return base_info_dict
 
 
-def save_to_mongo(result):
-    if collection.insert_one(result):
-        # print('存储到mongodb成功', result)
-        return True
-    return False
+# def save_to_mongo(result):
+#     if collection.insert_one(result):
+#         # print('存储到mongodb成功', result)
+#         return True
+#     return False
 
 
 def main(area: str):
     """ 输入区域 """
     # global df_community_info  好像这样无法使用？？？
-    df_community_info = pd.read_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\data\小区urls测试.xlsx')
+    df_community_info = pd.read_excel(r'D:\学习总文件夹\整体项目\爬虫\住房问题\链家\data\小区urls.xlsx')
+    print('== 我要开始咯！ {} ==', area)
     time0 = time.time()
     df_out = pd.DataFrame()
     urls = df_community_info[df_community_info['area']==area]['url'].tolist()
@@ -78,8 +80,8 @@ def main(area: str):
         item_info['url'] = url
         # 导出信息
         df_out = df_out.append(item_info, ignore_index=True)  # pandas
-        save_to_mongo(item_info)
-    df_out.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\result\{}_小区信息.xlsx'.format(area))
+        # save_to_mongo(item_info)
+    df_out.to_excel(r'D:\学习总文件夹\整体项目\爬虫\住房问题\链家\result\{}_小区信息.xlsx'.format(area))
     time1 = time.time()
     timedelta = round(time1 - time0, 0)
     print('== 该区域 {} 共计 {} 个小区，耗时 {} 秒'.format(area, n, timedelta))
@@ -87,7 +89,7 @@ def main(area: str):
         
 #%%
 if __name__ == '__main__':
-    df_community_info = pd.read_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\data\小区urls测试.xlsx')
+    df_community_info = pd.read_excel(r'D:\学习总文件夹\整体项目\爬虫\住房问题\链家\data\小区urls.xlsx')
     area_list = df_community_info['area'].unique().tolist()
     print('== 燥起来吧！！！！ ==')
     print('== 开始时间为{} =='.format(time.asctime()))
@@ -95,8 +97,4 @@ if __name__ == '__main__':
     pool.map(main, [i for i in area_list])
     print('== 完事了！！！ ==')
     print('== 结束时间为{} =='.format(time.asctime()))
-    
-
-
-    
     
