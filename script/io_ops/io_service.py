@@ -7,12 +7,13 @@ import os
 import pymongo
 
 
-def save_info_to_local(info: [dict], path: str, data_type='DataFrame'):
+def save_info_to_local(info: [dict], path: str, file_name='info.xlsx', data_type='DataFrame'):
     """
     将信息存入本地的方法
 
     :param info: 信息。dict组成的list
     :param path: 输出路径，不包含文件名
+    :param file_name: 输出文件名
     :param data_type: 输出文件的格式。目前支持 'json' 和 'DataFrame'
     :return: True/False, info
     """
@@ -22,10 +23,10 @@ def save_info_to_local(info: [dict], path: str, data_type='DataFrame'):
     # 生成输出的信息
     if data_type == 'DataFrame':
         df = pd.DataFrame.from_dict(info)
-        df.to_excel(os.path.join(path, 'info.xlsx'), index=False)
+        df.to_excel(os.path.join(path, file_name), index=False)
         data = df
     elif data_type == 'json':
-        with open(os.path.join(path, 'info.txt'), 'w') as f:
+        with open(os.path.join(path, file_name), 'w') as f:
             f.write(info)
         data = info
     else:

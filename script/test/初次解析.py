@@ -121,3 +121,13 @@ def main(path):
 """
 下一步将筛选条件参数化
 """
+
+my_html = get_one_page_html('https://sh.lianjia.com/zufang/pudong/rt200600000001l0l1rp6/?showMore=1')  # 浦东
+
+pages = find_page_url(my_html)
+
+df = pd.DataFrame()
+n = 0
+p = pages[0]
+p_html = get_one_page_html(p)
+tmp = get_room_info_page(p_html)

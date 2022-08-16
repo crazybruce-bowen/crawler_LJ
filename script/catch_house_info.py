@@ -1,8 +1,10 @@
 import os
+import sys
 import traceback
 
 path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家'
-os.chdir(path)
+if path not in sys.path:
+    sys.path.append(path)
 
 from script.http_ops.html_service import get_one_page_html
 from pyquery import PyQuery as pq
@@ -11,6 +13,7 @@ import numpy as np
 from script.common_ops.utils import print_time
 import time
 from script.io_ops.io_service import save_info_to_local, save_info_to_mongodb
+from multiprocessing import Process, Pool
 
 
 class HouseCatching:
@@ -20,8 +23,8 @@ class HouseCatching:
         self.url_base = url_base if url_base else 'https://sh.lianjia.com'
         # 均价5k-8k以上房源 TODO 修改为动态生成
         self.url_selection = 'https://sh.lianjia.com/zufang/rt200600000001l0l1rp6/?showMore=1'
-        self.html_base = get_one_page_html(self.url_selection)  # 筛选页首页html
-        self.doc_base = pq(self.html_base)  # 生成pg包的doc文件
+        # self.html_base = get_one_page_html(self.url_selection)  # 筛选页首页html
+        # self.doc_base = pq(self.html_base)  # 生成pg包的doc文件
         self.urls_area = None
 
     def generate_area_urls(self):
@@ -31,7 +34,7 @@ class HouseCatching:
         :return:
             [{'area': 小区区域, 'url': 分页地址}]
         """
-        doc = self.doc_base
+        doc = pq(get_one_page_html(self.url_selection))
         res = []
         for i in doc('ul[data-target=area]')('a').items():
             if i.text() != '不限':
@@ -108,10 +111,7 @@ class HouseCatching:
 
     @staticmethod
     def get_room_info(url_room) -> dict:
-        """
-            获取单个房源url的信息
-            暂时不需要房源额外信息，防止过多调用
-        """
+        """ 获取单个房源url的信息, 暂时不需要房源额外信息，防止过多调用 """
         print(url_room)
         return dict()
 
@@ -142,6 +142,20 @@ class HouseCatching:
             print('== 完成 {} 区域'.format(i['area']))
         return room_info_total
 
+    def main_multiprocess(self, area):
+        """ 子进程方法执行全量数据 """
+        print('=== 子进程开始执行 {} 区域 ==='.format(area))
+        room_info_total = self.get_room_info_by_area(area)
+        out_path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家\result\20220816'
+        file_name = area + '_20220816.xlsx'
+        save_info_to_local(room_info_total, out_path, file_name)
+        print('== {} 区域存储本地完毕，开始写入数据库 =='.format(area))
+
+        db_config = {'db_name': 'bw_test', 'tb_name': 'room_info_0816'}
+        save_info_to_mongodb(room_info_total, db_config)
+        print('== {} 区域数据库写入完毕 =='.format(area))
+        print('=== 子进程 {} 区域执行完毕 ==='.format(area))
+
 
 # 测试
 if __name__ == '__main__':
@@ -153,13 +167,20 @@ if __name__ == '__main__':
     # db_config = {'db_name': 'bw_test', 'tb_name': 'pudong_room_info'}
     # flag2 = save_info_to_mongodb(room_info_pudong, db_config)
 
-    # 全量测试
-    room_info_total = t.get_room_info_total()
-    out_path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家\result\20220815'
-    flag1, df = save_info_to_local(room_info_total, out_path)
-    print('== flag1 ==', flag1)
-    db_config = {'db_name': 'bw_test', 'tb_name': 'room_info'}
-    flag2 = save_info_to_mongodb(room_info_total, db_config)
-    print('== flag2 ==', flag2)
+    # # 全量测试
+    # room_info_total = t.get_room_info_total()
+    # out_path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家\result\20220815'
+    # flag1, df = save_info_to_local(room_info_total, out_path)
+    # print('== flag1 ==', flag1)
+    # db_config = {'db_name': 'bw_test', 'tb_name': 'room_info'}
+    # flag2 = save_info_to_mongodb(room_info_total, db_config)
+    # print('== flag2 ==', flag2)
     
     # url_pg = t.find_page_url(t.get_url_by_area('浦东'))[0]
+
+    # multiprocess测试
+    pool = Pool()
+    area_info = t.generate_area_urls()
+    area_list = [i['area'] for i in area_info]
+    pool.map(t.main_multiprocess, area_list)
+    print('== 全部执行完毕 ==')
