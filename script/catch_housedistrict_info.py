@@ -19,8 +19,8 @@ class HouseDistrictCatching:
         """ base_url: 链家首页 """
         self.url_base = base_url if base_url else 'https://sh.lianjia.com'
         self.url_selection = 'https://sh.lianjia.com/xiaoqu/bp6ep10000/'  # 均价6w以上小区 TODO 修改为动态生成
-        self.html_base = get_one_page_html(self.url_selection)  # 筛选页首页html
-        self.doc_base = pq(self.html_base)  # 生成pg包的doc文件
+        # self.html_base = get_one_page_html(self.url_selection)  # 筛选页首页html
+        # self.doc_base = pq(self.html_base)  # 生成pg包的doc文件
         self.urls_area = None
 
     def generate_area_urls(self):
@@ -30,7 +30,7 @@ class HouseDistrictCatching:
         :return:
             [{'area': 小区区域, 'url': 分页地址}]
         """
-        doc = self.doc_base
+        doc = pq(get_one_page_html(self.url_selection))
         res = []
         for i in doc('div[data-role=ershoufang]')('a').items():
             res.append({'area': i.text(),
@@ -64,7 +64,7 @@ class HouseDistrictCatching:
         :return:
         """
         if not area:
-            doc = self.doc_base
+            doc = pq(get_one_page_html(self.url_selection))
             house_num = int(doc('div.resultDes')('h2.total.fl')('span').text())
         else:
             url_area = self.get_url_by_area(area)
@@ -161,13 +161,27 @@ class HouseDistrictCatching:
             print('== 区域 {} 已经完成，耗时 {} 秒'.format(area, timedelta))
         return hd_info_list
 
+    def main_multiprocess(self, area):
+        """ 子进程方法执行全量数据 """
+        print('=== 子进程开始执行 {} 区域 ==='.format(area))
+        room_info_total = self.get_area_hd_info(area)
+        out_path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家\result\20220816'
+        file_name = area + '_小区_20220816.xlsx'
+        save_info_to_local(room_info_total, out_path, file_name)
+        print('== {} 区域存储本地完毕，开始写入数据库 =='.format(area))
+
+        db_config = {'db_name': 'bw_test', 'tb_name': 'house_district_info_20220816'}
+        save_info_to_mongodb(room_info_total, db_config)
+        print('== {} 区域数据库写入完毕 =='.format(area))
+        print('=== 子进程 {} 区域执行完毕 ==='.format(area))
+
 
 #%% 测试区域
 if __name__ == '__main__':
     t = HouseDistrictCatching()
-    hd_pudong = t.get_area_hd_info('浦东')
-    out_path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家\result\20220810'
-    flag1, df = save_info_to_local(hd_pudong, out_path)
-    db_config = {'db_name': 'bw_test', 'tb_name': 'pudong_house_district_info'}
-    flag2 = save_info_to_mongodb(hd_pudong, db_config)
+    # hd_pudong = t.get_area_hd_info('浦东')
+    # out_path = r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\链家\result\20220810'
+    # flag1, df = save_info_to_local(hd_pudong, out_path)
+    # db_config = {'db_name': 'bw_test', 'tb_name': 'pudong_house_district_info'}
+    # flag2 = save_info_to_mongodb(hd_pudong, db_config)
 
