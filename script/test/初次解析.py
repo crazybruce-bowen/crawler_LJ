@@ -104,16 +104,30 @@ def main(path):
 
     df = pd.DataFrame()
     n = 0
-    for p in pages:
-        p_html = get_one_page_html(p)
-        tmp = get_room_info_page(p_html)
-        for i in tmp:
-            df = df.append(i, ignore_index=True)
-        n += 1
-        print('== finish page {} df size is {}'.format(n, df.size))
-    df.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\result\链家浦东.xlsx',
-                index=None)
+    p = pages[0]
+    p_html = get_one_page_html(p)
+    tmp = get_room_info_page(p_html)
+    # for p in pages:
+    #     p_html = get_one_page_html(p)
+    #     tmp = get_room_info_page(p_html)
+    #     for i in tmp:
+    #         df = df.append(i, ignore_index=True)
+    #     n += 1
+    #     print('== finish page {} df size is {}'.format(n, df.size))
+    # df.to_excel(r'D:\Learn\学习入口\大项目\爬他妈的\住房问题\result\链家浦东.xlsx',
+    #             index=None)
+
 #%% TODOlist
 """
 下一步将筛选条件参数化
 """
+
+my_html = get_one_page_html('https://sh.lianjia.com/zufang/pudong/rt200600000001l0l1rp6/?showMore=1')  # 浦东
+
+pages = find_page_url(my_html)
+
+df = pd.DataFrame()
+n = 0
+p = pages[0]
+p_html = get_one_page_html(p)
+tmp = get_room_info_page(p_html)
